@@ -106,7 +106,35 @@ class All(Function):
 
 
 # TODO: Implement for Task 2.3.
+class EQ(Function):
+    pass
 
+class LT(Function):
+    pass 
+
+class Exp(Function):
+    pass
+
+class IsClose(Function):
+    pass
+
+class Log(Function):
+    pass
+
+class Mul(Function):
+    pass
+
+class Permute(Function):
+    pass
+
+class ReLU(Function):
+    pass
+
+class Sigmoid(Function):
+    pass 
+
+class Sum(Function):
+    pass
 
 class View(Function):
     @staticmethod
