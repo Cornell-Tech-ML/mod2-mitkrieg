@@ -151,7 +151,7 @@ class Sigmoid(ScalarFunction):
 
     @staticmethod
     def backward(ctx: Context, d_output: float) -> float:
-        r"""f'(x) = \sigma(a) (1-\sigma(a)$"""
+        r"""$f'(x) = \sigma(a) (1-\sigma(a)$"""
         (a,) = ctx.saved_values
         return operators.sigmoid(a) * (1 - operators.sigmoid(a)) * d_output
 
