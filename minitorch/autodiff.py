@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Iterable, Tuple, Protocol
+from typing import Any, Iterable, Tuple, Protocol, List
 
 
 # ## Task 1.1
@@ -78,24 +78,39 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
 
     """
     # TODO: Implement for Task 1.4.
-    visited = []
-    final = []
+    # visited = []
+    # final = []
 
-    def visit(v: Variable) -> None:
-        if v.unique_id in visited:
+    # def visit(v: Variable) -> None:
+    #     if v.unique_id in visited:
+    #         return
+    #     visited.append(v.unique_id)
+
+    #     for parent in v.parents:
+    #         visit(parent)
+
+    #     if not v.is_constant():
+    #         final.append(v)
+
+    # visit(variable)
+
+    # final.reverse()
+    # return final
+    order: List[Variable] = []
+    seen = set()
+
+    def visit(var: Variable) -> None:
+        if var.unique_id in seen or var.is_constant():
             return
-        visited.append(v.unique_id)
-
-        for parent in v.parents:
-            visit(parent)
-
-        if not v.is_constant():
-            final.append(v)
-
+        if not var.is_leaf():
+            for m in var.parents:
+                if not m.is_constant():
+                    visit(m)
+        seen.add(var.unique_id)
+        order.insert(0, var)
     visit(variable)
+    return order
 
-    final.reverse()
-    return final
 
 
 def backpropagate(variable: Variable, deriv: Any) -> None:
@@ -112,16 +127,31 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
 
     """
     # TODO: Implement for Task 1.4.
-    vars = topological_sort(variable)
-    derivs = {v.unique_id: 0 for v in vars}
-    derivs[variable.unique_id] = deriv
-    for var in vars:
+    # vars = topological_sort(variable)
+    # derivs = {v.unique_id: 0 for v in vars}
+    # derivs[variable.unique_id] = deriv
+    # for var in vars:
+    #     if var.is_leaf():
+    #         var.accumulate_derivative(derivs[var.unique_id])
+    #     else:
+    #         chain = var.chain_rule(derivs[var.unique_id])
+    #         for v, d in chain:
+    #             derivs[v.unique_id] += d
+
+    queue = topological_sort(variable)
+    derivatives = {}
+    derivatives[variable.unique_id] = deriv
+    for var in queue:
+        deriv = derivatives[var.unique_id]
         if var.is_leaf():
-            var.accumulate_derivative(derivs[var.unique_id])
+            var.accumulate_derivative(deriv)
         else:
-            chain = var.chain_rule(derivs[var.unique_id])
-            for v, d in chain:
-                derivs[v.unique_id] += d
+            for v, d in var.chain_rule(deriv):
+                if v.is_constant():
+                    continue
+                derivatives.setdefault(v.unique_id, 0.0)
+                derivatives[v.unique_id] = derivatives[v.unique_id] + d
+
 
 
 @dataclass

@@ -85,7 +85,20 @@ def broadcast_index(
 
     """
     # TODO: Implement for Task 2.2.
-    raise NotImplementedError("Need to implement for Task 2.2")
+    # traverse dimensions in reverse
+    for i in range(-1, -len(shape) - 1, -1):
+        big_i = i + len(big_shape)  # Align dimension indices
+
+        if big_i >= 0:
+            big_idx = big_index[big_i]
+            small_dim = shape[i]
+
+            if small_dim == 1:
+                out_index[i] = 0  # Broadcasted dimension
+            else:
+                out_index[i] = big_idx  # Copy index from big tensor
+        else:
+            out_index[i] = 0  # Dimension not present in big_shape
 
 
 def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
@@ -103,7 +116,20 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
 
     """
     # TODO: Implement for Task 2.2.
-    raise NotImplementedError("Need to implement for Task 2.2")
+    max_dims = max(len(shape1), len(shape2))
+
+    s1 = (1,) * (max_dims - len(shape1)) + tuple(shape1)
+    s2 = (1,) * (max_dims - len(shape2)) + tuple(shape2)
+    result = []
+
+    for dim1, dim2 in zip(s1,s2):
+        if dim1 == dim2 or dim1 == 1 or dim2 == 1:
+            result.append(max(dim1, dim2))
+        else:
+            raise IndexingError("Cannot Broadcast Shapes")
+    return tuple(result)
+
+        
 
 
 def strides_from_shape(shape: UserShape) -> UserStrides:

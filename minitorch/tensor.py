@@ -285,3 +285,74 @@ class Tensor:
 
     # Functions
     # TODO: Implement for Task 2.3.
+    @property
+    def size(self) -> int:
+        return self._tensor.size
+    
+    @property
+    def dims(self) -> int:
+        return self._tensor.dims
+
+    def __add__(self, other: TensorLike) -> Tensor:
+        return Add.apply(self, self._ensure_tensor(other))
+
+    def __sub__(self, other: TensorLike) -> Tensor:
+        return Add.apply(self, -self._ensure_tensor(other))
+
+    def __neg__(self) -> Tensor:
+        return Neg.apply(self)
+    
+    def __mul__(self, other: TensorLike) -> Tensor:
+        return Mul.apply(self, self._ensure_tensor(other))
+    
+    def __lt__(self, other: TensorLike) -> Tensor:
+        return LT.apply(self, self._ensure_tensor(other))
+    
+    def __eq__(self, other: TensorLike) -> Tensor:
+        return EQ.apply(self, self._ensure_tensor(other))
+    
+    def __radd__(self, other: TensorLike) -> Tensor:
+        return Add.apply(self._ensure_tensor(other), self)
+    
+    def __rmul__(self, other: TensorLike) -> Tensor:
+        return Mul.apply(self._ensure_tensor(other), self)
+    
+    def all(self, dim: int = 0) -> Tensor:
+        return All.apply(self, self._ensure_tensor(dim))
+    
+    def is_close(self, other:TensorLike) -> Tensor:
+        return IsClose.apply(self, self._ensure_tensor(other))
+    
+    def sigmoid(self) -> Tensor:
+        return Sigmoid.apply(self)
+    
+    def relu(self) -> Tensor:
+        return ReLU.apply(self)
+    
+    def log(self) -> Tensor:
+        return Log.apply(self)
+    
+    def exp(self) -> Tensor:
+        return Exp.apply(self)
+    
+    def sum(self, dim: Optional[int]= None):
+        """Sum over dim dimension"""
+        if dim is not None:
+            return Sum.apply(self, self._ensure_tensor(dim))
+        else:
+            return Sum.apply(self.contiguous().view(self.size), self._ensure_tensor(0))
+    
+    def mean(self, dim: Optional[int]= None):
+        if dim is not None:
+            return self.sum(dim) / self.shape[dim]
+        else:
+            return self.sum() / self.size
+    
+    def permute(self, order: Tensor) -> Tensor:
+        return Permute.apply(self, order)
+    
+    def view(self, *shape: int) -> Tensor:
+        return View.apply(self, tensor(list(shape)))
+    
+    def zero_grad_(self) -> None:
+        self.grad = self.zeros(self.shape)

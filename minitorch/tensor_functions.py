@@ -107,34 +107,118 @@ class All(Function):
 
 # TODO: Implement for Task 2.3.
 class EQ(Function):
-    pass
+    
+    @staticmethod
+    def forward(ctx: Context, t1: Tensor, t2:Tensor) -> Tensor:
+        """Computes True for each element where t1's element == t2's element"""
+        ctx.save_for_backward(t1.shape, t2.shape)
+        return t1.f.eq_zip(t1, t2)
+    
+    @staticmethod
+    def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, Tensor]:
+        """f't1(t1,t2) = 0, f't2(t1,t2) = 0"""
+        shape1, shape2 = ctx.saved_values
+        return zeros(shape=shape1), zeros(shape=shape2)
 
 class LT(Function):
-    pass 
+    @staticmethod
+    def forward(ctx: Context, t1: Tensor, t2: Tensor) -> Tensor:
+        ctx.save_for_backward(t1.shape, t2.shape)
+        return t1.f.lt_zip(t1, t2)
+    
+    @staticmethod
+    def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, Tensor]:
+        shape1, shape2 = ctx.saved_values
+        return zeros(shape=shape1), zeros(shape=shape2)
 
 class Exp(Function):
-    pass
+    @staticmethod
+    def forward(ctx: Context, t: Tensor) -> Tensor:
+        forwarded = t.f.exp_map(t)
+        ctx.save_for_backward(forwarded)
+        return forwarded
+    
+    @staticmethod
+    def backward(ctx: Context, grad_output: Tensor) -> Tensor:
+        (t,) = ctx.saved_tensors
+        return grad_output.f.mul_reduce(grad_output, t)
 
 class IsClose(Function):
-    pass
+    @staticmethod
+    def forward(ctx: Context, t1: Tensor, t2: Tensor) -> Tensor:
+        return t1.f.is_close_zip(t1, t2)
+    
 
 class Log(Function):
-    pass
+    @staticmethod
+    def forward(ctx: Context, t: Tensor) -> Tensor:
+        ctx.save_for_backward(t)
+        return t.f.log_map(t)
+    
+    @staticmethod
+    def backward(ctx: Context, grad_output: Tensor) -> Tensor:
+        (t,) = ctx.saved_tensors
+        return grad_output.f.log_back_zip(t, grad_output)
 
 class Mul(Function):
-    pass
+    @staticmethod
+    def forward(ctx: Context, t1: Tensor, t2: Tensor) -> Tensor:
+        ctx.save_for_backward(t1, t2)
+        return t1.f.mul_zip(t1,t2)
+    
+    @staticmethod
+    def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, Tensor]:
+        t1, t2 = ctx.saved_tensors
+        return grad_output.f.mul_zip(t2, grad_output), grad_output.f.mul_zip(t1, grad_output)
 
 class Permute(Function):
-    pass
+    @staticmethod
+    def forward(ctx: Context, t: Tensor, dims: Tensor) -> Tensor:
+        perm = dims._tensor._storage.tolist()
+        ctx.save_for_backward(perm)
+        return t._new(t._tensor.permute(*perm))
+    
+    @staticmethod
+    def backward(ctx: Context, grad_output: Tensor) -> Tensor:
+        (order,) = ctx.saved_tensors
+        new_to_old_order = {val:idx for idx, val in enumerate(order)}
+        old_order = [new_to_old_order[i] for i in range(len(order))]
+        return grad_output._new(grad_output._tensor.permute(*old_order))
+
 
 class ReLU(Function):
-    pass
+    @staticmethod
+    def forward(ctx: Context, t: Tensor) -> Tensor:
+        ctx.save_for_backward(t)
+        return t.f.relu_map(t)
+    
+    @staticmethod
+    def backward(ctx: Context, grad_output: Tensor) -> Tensor:
+        (t,) = ctx.saved_tensors
+        return grad_output.f.relu_back_zip(t, grad_output)
+
 
 class Sigmoid(Function):
-    pass 
+    @staticmethod
+    def forward(ctx: Context, t:Tensor) -> Tensor:
+        forwarded = t.f.sigmoid_map(t)
+        ctx.save_for_backward(forwarded)
+        return forwarded 
+
+    @staticmethod
+    def backward(ctx: Context, grad_output: Tensor) -> Tensor:
+        (t,) = ctx.saved_tensors
+        deriv = t.f.mul_zip(1 + t.f.neg_map(t), t)
+        return grad_output.f.mul_zip(deriv, grad_output)
 
 class Sum(Function):
-    pass
+    @staticmethod
+    def forward(ctx: Context, t: Tensor, dim: Tensor) -> Tensor:
+        return t.f.add_reduce(t, int(dim.item()))
+    
+    @staticmethod
+    def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor, float]:
+        return grad_output, 0.0
 
 class View(Function):
     @staticmethod
