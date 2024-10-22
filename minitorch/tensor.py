@@ -320,6 +320,9 @@ class Tensor:
     def __lt__(self, other: TensorLike) -> Tensor:
         return LT.apply(self, self._ensure_tensor(other))
 
+    def __gt__(self, other: TensorLike) -> Tensor:
+        return LT.apply(self._ensure_tensor(other), self)
+
     def __eq__(self, other: TensorLike) -> Tensor:
         return EQ.apply(self, self._ensure_tensor(other))
 
